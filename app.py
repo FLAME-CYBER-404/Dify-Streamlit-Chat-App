@@ -1,11 +1,11 @@
 import requests
-import streamlit as st 
+import streamlit as st
 
-dify_api_key = ""
+# Owner name: FLAME
+huggingface_api_key = "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"  # Replace with your actual Hugging Face API key
+url = "https://api-inference.huggingface.co/models/gpt2"  # Replace 'gpt2' with any other Hugging Face model name
 
-url = "https://api.dify.ai/v1/chat-messages"
-
-st.title("Dify Streamlit App")
+st.title("Flame's Chat App")
 
 if "conversation_id" not in st.session_state:
     st.session_state.conversation_id = ""
@@ -13,47 +13,50 @@ if "conversation_id" not in st.session_state:
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+# Display previous messages in chat
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-prompt = st.chat_input("Enter you question")
+# User input
+prompt = st.chat_input("Enter your question")
 
 if prompt:
+    # Display user's message
     with st.chat_message("user"):
         st.markdown(prompt)
     st.session_state.messages.append({"role": "user", "content": prompt})
 
+    # Prepare to send the message to Hugging Face API
     with st.chat_message("assistant"):
         message_placeholder = st.empty()
 
         headers = {
-            'Authorization': f'Bearer {dify_api_key}',
+            'Authorization': f'Bearer {huggingface_api_key}',
             'Content-Type': 'application/json'
         }
 
         payload = {
-            "inputs": {},
-            "query": prompt,
-            "response_mode": "blocking",
-            "conversation_id": st.session_state.conversation_id,
-            "user": "aianytime",
-            "files": []
+            "inputs": prompt,
+            "parameters": {
+                "max_new_tokens": 100  # Adjust max tokens as needed
+            }
         }
 
         try:
+            # Send the request to Hugging Face API
             response = requests.post(url, headers=headers, json=payload)
             response.raise_for_status()
             response_data = response.json()
 
-            full_response = response_data.get('answer', '')
-            new_conversation_id = response_data.get('conversation_id', st.session_state.conversation_id)
-            st.session_state.conversation_id = new_conversation_id
+            # Extract the generated response
+            full_response = response_data[0].get('generated_text', '')
 
         except requests.exceptions.RequestException as e:
             st.error(f"An error occurred: {e}")
             full_response = "An error occurred while fetching the response."
 
+        # Display assistant's message
         message_placeholder.markdown(full_response)
-
         st.session_state.messages.append({"role": "assistant", "content": full_response})
+    
