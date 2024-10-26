@@ -3,7 +3,7 @@ import streamlit as st
 
 # Owner name: FLAME
 huggingface_api_key = "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"  # Replace with your actual Hugging Face API key
-url = "https://api-inference.huggingface.co/models/gpt2"  # Replace 'gpt2' with any other Hugging Face model name
+url = "https://api-inference.huggingface.co/models/bigcode/starcoder"  # Replace 'gpt2' with any other Hugging Face model name
 
 st.title("Flame's Chat App")
 
