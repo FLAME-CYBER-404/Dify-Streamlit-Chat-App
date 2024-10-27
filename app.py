@@ -1,9 +1,13 @@
 import requests
 import streamlit as st
+from transformers import pipeline
 
 # Owner name: FLAME
 huggingface_api_key = "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"  # Replace with your actual Hugging Face API key
-url = "https://api-inference.huggingface.co/models/bigcode/starcoder"  # Replace 'gpt2' with any other Hugging Face model name
+model_id = "meta-llama/Meta-Llama-3-8B-Instruct"  # Replace with the specific LLaMA 3 model ID
+
+# Initialize the Hugging Face pipeline
+generator = pipeline("text-generation", model=model_id, use_auth_token=huggingface_api_key)
 
 st.title("Flame's Chat App")
 
@@ -27,36 +31,20 @@ if prompt:
         st.markdown(prompt)
     st.session_state.messages.append({"role": "user", "content": prompt})
 
-    # Prepare to send the message to Hugging Face API
+    # Prepare to generate a response with the LLaMA 3 model
     with st.chat_message("assistant"):
         message_placeholder = st.empty()
 
-        headers = {
-            'Authorization': f'Bearer {huggingface_api_key}',
-            'Content-Type': 'application/json'
-        }
-
-        payload = {
-            "inputs": prompt,
-            "parameters": {
-                "max_new_tokens": 100  # Adjust max tokens as needed
-            }
-        }
-
         try:
-            # Send the request to Hugging Face API
-            response = requests.post(url, headers=headers, json=payload)
-            response.raise_for_status()
-            response_data = response.json()
+            # Generate response using the Hugging Face pipeline
+            response = generator(prompt, max_new_tokens=100)[0]["generated_text"]
+            full_response = response
 
-            # Extract the generated response
-            full_response = response_data[0].get('generated_text', '')
-
-        except requests.exceptions.RequestException as e:
+        except Exception as e:
             st.error(f"An error occurred: {e}")
             full_response = "An error occurred while fetching the response."
 
         # Display assistant's message
         message_placeholder.markdown(full_response)
         st.session_state.messages.append({"role": "assistant", "content": full_response})
-    
+        
